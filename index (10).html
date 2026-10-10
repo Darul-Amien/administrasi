@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard Virtual Office PDF Darul Amien</title>
+  <link rel="icon" href="https://lh3.googleusercontent.com/d/1C8o7FTWQvkRkGbFNyNvPPwGvV8geH4NG">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- SECTION 1: HALAMAN LOGIN -->
+<div id="loginContainer" class="p-3">
+  <div class="card login-card bg-white p-4">
+    <div class="text-center mb-4">
+      <img src="https://lh3.googleusercontent.com/d/1C8o7FTWQvkRkGbFNyNvPPwGvV8geH4NG" alt="Logo" width="70" height="70" class="rounded-circle bg-light p-1 shadow-sm mb-3" style="object-fit: cover;">
+      <h5 class="fw-bold text-success mb-1">Virtual Office Darul Amien</h5>
+      <p class="text-muted small">Silakan login untuk mengakses dashboard admin</p>
+    </div>
+    
+    <div id="loginAlert" class="alert alert-danger d-none py-2 small fw-semibold" role="alert"></div>
+
+    <form onsubmit="handleLoginSubmit(event)">
+      <div class="mb-3">
+        <label class="form-label small fw-semibold text-secondary"><i class="bi bi-person-fill"></i> Username</label>
+        <input type="text" id="loginUsername" class="form-control" placeholder="Masukkan username" required autofocus>
+      </div>
+      <div class="mb-4">
+        <label class="form-label small fw-semibold text-secondary"><i class="bi bi-shield-lock-fill"></i> Password</label>
+        <input type="password" id="loginPassword" class="form-control" placeholder="Masukkan password" required>
+      </div>
+      <button type="submit" id="btnLogin" class="btn btn-success w-100 fw-bold py-2 shadow-sm">
+        <i class="bi bi-box-arrow-in-right"></i> Masuk Dashboard
+      </button>
+    </form>
+    <div class="text-center mt-3">
+      <span class="text-muted" style="font-size: 0.75rem;">&copy; 2026 PDF Darul Amien. All Rights Reserved.</span>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 2: DASHBOARD UTAMA -->
+<div id="mainDashboardContainer" class="d-none">
+  <!-- Navbar -->
+  <nav class="navbar navbar-dark sticky-top mb-4 no-print">
+    <div class="container">
+      <div class="navbar-brand mb-0 h1 d-flex align-items-center">
+        <img src="https://lh3.googleusercontent.com/d/1C8o7FTWQvkRkGbFNyNvPPwGvV8geH4NG" alt="Logo" width="35" height="35" class="d-inline-block align-text-top me-2 rounded-circle bg-white p-1" style="object-fit: cover;">
+        <span class="d-none d-md-inline">Dashboard Virtual Office PDF Darul Amien</span><span class="d-md-none">Virtual Office Darul Amien</span>
+      </div>
+      <div class="d-none d-md-block">
+        <button class="btn btn-danger btn-sm me-2 fw-bold" onclick="triggerResetTahunAjaran()"><i class="bi bi-arrow-counterclockwise"></i> Reset Tahun Ajaran</button>
+        <button class="btn btn-success btn-sm me-2 fw-bold" onclick="bukaPengingatWA()"><i class="bi bi-whatsapp"></i> Pengingat WA</button>
+        <button class="btn btn-warning btn-sm me-2 fw-bold" onclick="syncStatusSantri()"><i class="bi bi-arrow-repeat"></i> Cek Menunggak</button>
+        <button class="btn btn-outline-light btn-sm me-2" onclick="window.print()"><i class="bi bi-printer"></i> Cetak</button>
+        <button class="btn btn-light btn-sm me-2" onclick="initDashboard()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+        <button class="btn btn-outline-danger btn-sm text-white border-white fw-bold" onclick="handleLogout()"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+      </div>
+      <button class="btn btn-light btn-sm d-md-none" onclick="initDashboard()" aria-label="Refresh data"><i class="bi bi-arrow-clockwise"></i></button>
+    </div>
+  </nav>
+
+  <div class="container pb-5">
+    <div id="alertBox" class="alert d-none mb-4 no-print" role="alert"></div>
+    <div id="bannerNIS" data-view="home" class="alert alert-warning d-none mb-4 no-print d-flex flex-wrap gap-2 align-items-center justify-content-between" role="alert">
+      <span id="bannerNISteks"></span>
+      <span class="ms-auto d-flex gap-2"><button id="btnLihatGanda" class="btn btn-danger btn-sm d-none" onclick="bukaNisGanda()"><i class="bi bi-search"></i> Lihat NIS ganda</button><button id="btnHubungkanNIS" class="btn btn-dark btn-sm d-none" onclick="hubungkanNIS()">Hubungkan otomatis</button><button id="btnRapikanTrx" class="btn btn-primary btn-sm d-none" onclick="bukaTrxTanpaNis()"><i class="bi bi-list-check"></i> Rapikan per nama</button></span>
+    </div>
+
+    <!-- AKSI CEPAT (khusus HP) -->
+    <div class="row g-2 mb-3 d-md-none no-print" data-view="home">
+      <div class="col-4"><button class="qa" onclick="mulaiBayar('spp')"><i class="bi bi-credit-card-fill text-primary"></i><span>Terima SPP</span></button></div>
+      <div class="col-4"><button class="qa" onclick="mulaiBayar('kd')"><i class="bi bi-cup-hot-fill text-warning"></i><span>Kost Dapur</span></button></div>
+      <div class="col-4"><button class="qa" onclick="mulaiBayar('du')"><i class="bi bi-mortarboard-fill text-info"></i><span>Daftar Ulang</span></button></div>
+      <div class="col-4"><button class="qa" onclick="mulaiBayar('setor')"><i class="bi bi-box-arrow-up-right text-success"></i><span>Setor Bendahara</span></button></div>
+      <div class="col-4"><button class="qa" onclick="bukaPengingatWA()"><i class="bi bi-whatsapp text-success"></i><span>Pengingat WA</span></button></div>
+      <div class="col-4"><button class="qa" onclick="syncStatusSantri()"><i class="bi bi-arrow-repeat text-danger"></i><span>Cek Menunggak</span></button></div>
+    </div>
+
+    <!-- 1. DASHBOARD KAS & AKUMULASI -->
+    <div class="row g-3 mb-4 no-print" data-view="home">
+      <div class="col-6 col-md-3">
+        <div class="card card-custom p-3 stat-card santri bg-white">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <span class="text-muted fw-semibold small">Santri Terdaftar</span>
+              <h3 class="mb-0 text-success fw-bold" id="statTotalSantri">0</h3>
+              <span class="badge bg-success mt-1" id="badgeSantriDetail">Aktif: 0 | Tunggak: 0 | Off: 0</span>
+            </div>
+            <div class="fs-1 text-success opacity-50"><i class="bi bi-people-fill"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card card-custom p-3 stat-card cash bg-white">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <span class="text-muted fw-semibold small">Cash di Tangan Admin</span>
+              <h3 class="mb-0 text-success fw-bold" id="statCashDiTangan">Rp 0</h3>
+              <span class="small text-muted">Siap Disetorkan</span>
+            </div>
+            <div class="fs-1 text-success opacity-50"><i class="bi bi-cash-stack"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card card-custom p-3 stat-card spp bg-white">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <span class="text-muted fw-semibold small">Total Setoran ke Bendahara</span>
+              <h3 class="mb-0 text-primary fw-bold" id="statTotalSetoran">Rp 0</h3>
+              <span class="small text-muted">Sudah Diserahkan</span>
+            </div>
+            <div class="fs-1 text-primary opacity-50"><i class="bi bi-safe-fill"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card card-custom p-3 stat-card tunggakan bg-white">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="d-flex align-items-center justify-content-between">
+                <span class="text-muted fw-semibold small">Total Tunggakan</span>
+                <span class="badge bg-danger cursor-pointer ms-1" style="font-size: 0.65rem;" onclick="toggleFilterTunggakanBox()"><i class="bi bi-funnel-fill"></i> Filter</span>
+              </div>
+              <h3 class="mb-0 text-danger fw-bold" id="statTunggakan">Rp 0</h3>
+              <span class="badge bg-danger mt-1" id="badgeTunggakanDetail">SPP: 0 | KD: 0</span>
+            </div>
+            <div class="fs-1 text-danger opacity-50"><i class="bi bi-exclamation-triangle-fill"></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTER KHUSUS TUNGGAKAN -->
+    <div id="boxFilterTunggakan" data-view="home" class="card card-custom p-3 bg-white mb-4 no-print border-start border-4 border-danger shadow-sm">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="fw-bold text-danger mb-0"><i class="bi bi-sliders"></i> Filter & Rentang Akumulasi Tunggakan</h6>
+        <button class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="resetFilterTunggakan()">Reset Filter</button>
+      </div>
+      <div class="row g-2 align-items-end">
+        <!-- Jenis Tunggakan -->
+        <div class="col-md-3">
+          <label class="form-label small fw-semibold text-muted mb-1">Jenis Pembayaran:</label>
+          <select id="fltJenisTunggakan" class="form-select form-select-sm" onchange="onJenisTunggakanChange()">
+            <option value="SEMUA" selected>Semua (SPP, Kost Dapur & Daftar Ulang)</option>
+            <option value="SPP">Hanya SPP</option>
+            <option value="KD">Hanya Kost Dapur</option>
+            <option value="DU">Hanya Daftar Ulang</option>
+          </select>
+        </div>
+
+        <!-- Filter SPP -->
+        <div class="col-md-4" id="grpFilterSPP">
+          <label class="form-label small fw-semibold text-primary mb-1">Rentang SPP (Bulan):</label>
+          <div class="input-group input-group-sm">
+            <select id="fltSPPDari" class="form-select" onchange="loadTunggakan()">
+              <option value="">-- Dari --</option>
+              <option value="Juli" selected>Juli</option><option value="Agustus">Agustus</option><option value="September">September</option>
+              <option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option>
+              <option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option>
+              <option value="April">April</option><option value="Mei">Mei</option><option value="Juni">Juni</option>
+            </select>
+            <span class="input-group-text">s/d</span>
+            <select id="fltSPPSampai" class="form-select" onchange="loadTunggakan()">
+              <option value="">-- Sampai --</option>
+              <option value="Juli">Juli</option><option value="Agustus">Agustus</option><option value="September">September</option>
+              <option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option>
+              <option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option>
+              <option value="April">April</option><option value="Mei">Mei</option><option value="Juni" selected>Juni</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Filter KD -->
+        <div class="col-md-5" id="grpFilterKD">
+          <label class="form-label small fw-semibold text-warning mb-1">Rentang Kost Dapur (Bulan & Pekan):</label>
+          <div class="row g-1">
+            <div class="col-12 col-sm-6">
+              <div class="input-group input-group-sm">
+                <select id="fltKDDariBulan" class="form-select" onchange="loadTunggakan()">
+                  <option value="Juli" selected>Juli</option><option value="Agustus">Agustus</option><option value="September">September</option>
+                  <option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option>
+                  <option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option>
+                  <option value="April">April</option><option value="Mei">Mei</option><option value="Juni">Juni</option>
+                </select>
+                <select id="fltKDDariPekan" class="form-select" onchange="loadTunggakan()">
+                  <option value="Pekan 1" selected>Pkn 1</option><option value="Pekan 2">Pkn 2</option><option value="Pekan 3">Pkn 3</option><option value="Pekan 4">Pkn 4</option><option value="Pekan 5">Pkn 5</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6">
+              <div class="input-group input-group-sm">
+                <select id="fltKDSampaiBulan" class="form-select" onchange="loadTunggakan()">
+                  <option value="Juli">Juli</option><option value="Agustus">Agustus</option><option value="September">September</option>
+                  <option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option>
+                  <option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option>
+                  <option value="April">April</option><option value="Mei">Mei</option><option value="Juni" selected>Juni</option>
+                </select>
+                <select id="fltKDSampaiPekan" class="form-select" onchange="loadTunggakan()">
+                  <option value="Pekan 1">Pkn 1</option><option value="Pekan 2">Pkn 2</option><option value="Pekan 3">Pkn 3</option><option value="Pekan 4">Pkn 4</option><option value="Pekan 5" selected>Pkn 5</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. DIAGRAM PERSENTASE -->
+    <div class="row g-4 mb-4 no-print" data-view="home">
+      <div class="col-md-6">
+        <div class="card card-custom p-3 bg-white text-center">
+          <h6 class="fw-bold text-primary mb-2"><i class="bi bi-pie-chart-fill"></i> Persentase Status SPP</h6>
+          <div style="height: 180px;" class="d-flex justify-content-center">
+            <canvas id="chartSPP"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card card-custom p-3 bg-white text-center">
+          <h6 class="fw-bold text-warning mb-2"><i class="bi bi-pie-chart-fill"></i> Persentase Status Kost Dapur</h6>
+          <div style="height: 180px;" class="d-flex justify-content-center">
+            <canvas id="chartKD"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MENU LAINNYA (khusus HP) -->
+    <div class="card card-custom bg-white mb-3 d-md-none no-print" data-view="menu">
+      <div class="list-group list-group-flush rounded">
+        <button class="list-group-item list-group-item-action py-3" onclick="bukaPengingatWA()"><i class="bi bi-whatsapp text-success me-2"></i> Pengingat Tunggakan ke Wali (WA)</button>
+        <button class="list-group-item list-group-item-action py-3" onclick="syncStatusSantri()"><i class="bi bi-arrow-repeat text-warning me-2"></i> Cek Status Menunggak</button>
+        <button class="list-group-item list-group-item-action py-3" onclick="bukaNisGanda()"><i class="bi bi-search text-danger me-2"></i> Cek NIS Ganda</button>
+        <button class="list-group-item list-group-item-action py-3" onclick="initDashboard()"><i class="bi bi-arrow-clockwise me-2"></i> Refresh Data</button>
+        <button class="list-group-item list-group-item-action py-3" onclick="window.print()"><i class="bi bi-printer me-2"></i> Cetak Halaman</button>
+        <button class="list-group-item list-group-item-action py-3 text-danger" onclick="triggerResetTahunAjaran()"><i class="bi bi-arrow-counterclockwise me-2"></i> Reset Tahun Ajaran</button>
+        <button class="list-group-item list-group-item-action py-3 text-danger fw-bold" onclick="handleLogout()"><i class="bi bi-box-arrow-right me-2"></i> Keluar</button>
+      </div>
+    </div>
+
+    <!-- 3. TOMBOL GENERATE TAGIHAN MASAL -->
+    <div class="card card-custom p-3 bg-white mb-4 no-print border-start border-4 border-info" data-view="menu">
+      <div class="row align-items-center g-2">
+        <div class="col-md-4">
+          <h6 class="fw-bold text-dark mb-0"><i class="bi bi-magic text-info"></i> Buat Tagihan Masal (Belum Lunas)</h6>
+          <span class="small text-muted">Buat tagihan otomatis untuk seluruh santri aktif.</span>
+        </div>
+        <div class="col-md-3">
+          <div class="input-group input-group-sm">
+            <select id="genBulan" class="form-select">
+              <option selected>Juli</option><option>Agustus</option><option>September</option><option>Oktober</option>
+              <option>November</option><option>Desember</option><option>Januari</option><option>Februari</option>
+              <option>Maret</option><option>April</option><option>Mei</option><option>Juni</option>
+            </select>
+            <button class="btn btn-primary" onclick="triggerGenTagihan('SPP')">Tagih SPP</button>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="input-group input-group-sm">
+            <select id="genKDBulan" class="form-select">
+              <option value="">-- Bulan --</option>
+              <option selected>Juli</option><option>Agustus</option><option>September</option><option>Oktober</option>
+              <option>November</option><option>Desember</option><option>Januari</option><option>Februari</option>
+              <option>Maret</option><option>April</option><option>Mei</option><option>Juni</option>
+            </select>
+            <select id="genPekan" class="form-select">
+              <option>Pekan 1</option><option>Pekan 2</option><option>Pekan 3</option><option>Pekan 4</option><option>Pekan 5</option>
+            </select>
+            <button class="btn btn-warning text-white" onclick="triggerGenTagihan('KD')">Tagih KD</button>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="input-group input-group-sm">
+            <input type="text" id="genDUPeriode" class="form-control" placeholder="Tahun ajaran, mis. 2026/2027">
+            <button class="btn btn-success" onclick="triggerGenTagihan('DU')">Tagih Daftar Ulang</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3b. AKSI MASAL PER KELAS -->
+    <div class="card card-custom p-3 mb-4 bg-white no-print" data-view="menu">
+      <h6 class="fw-bold text-dark mb-1"><i class="bi bi-diagram-3 text-danger"></i> Aksi Massal Per Kelas (Tagihan Belum Lunas)</h6>
+      <div class="small text-muted mb-2">Contoh: batalkan tagihan Kost Dapur Juli Pekan 1 untuk Kelas 1 yang belum wajib bayar. Hanya tagihan berstatus Belum Lunas yang terpengaruh.</div>
+      <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-2">
+          <label class="form-label small mb-0">Jenis</label>
+          <select id="aksiJenis" class="form-select form-select-sm" onchange="onAksiJenisChange()"><option value="SPP">SPP</option><option value="KD">Kost Dapur</option><option value="DU">Daftar Ulang</option></select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label small mb-0">Kelas</label>
+          <select id="aksiKelas" class="form-select form-select-sm"><option value="">-- Pilih Kelas --</option></select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label small mb-0">Bulan</label>
+          <select id="aksiBulan" class="form-select form-select-sm"><option value="">-- Bulan --</option><option>Juli</option><option>Agustus</option><option>September</option><option>Oktober</option><option>November</option><option>Desember</option><option>Januari</option><option>Februari</option><option>Maret</option><option>April</option><option>Mei</option><option>Juni</option></select>
+        </div>
+        <div class="col-6 col-md-2 d-none" id="grpAksiPeriode">
+          <label class="form-label small mb-0">Tahun Ajaran</label>
+          <input type="text" id="aksiPeriode" class="form-control form-control-sm" placeholder="2026/2027">
+        </div>
+        <div class="col-6 col-md-2 d-none" id="grpAksiPekan">
+          <label class="form-label small mb-0">Pekan</label>
+          <select id="aksiPekan" class="form-select form-select-sm"><option>Pekan 1</option><option>Pekan 2</option><option>Pekan 3</option><option>Pekan 4</option><option>Pekan 5</option></select>
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label small mb-0">Aksi</label>
+          <select id="aksiTipe" class="form-select form-select-sm">
+            <option value="HAPUS">Hapus tagihan (belum wajib bayar)</option>
+            <option value="LUNAS">Tandai lunas (uang sudah diterima)</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-1">
+          <button class="btn btn-danger btn-sm w-100" onclick="jalankanAksiMasal()">Jalankan</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PILIH JENIS TRANSAKSI (khusus HP) -->
+    <div id="segBayar" class="d-flex gap-1 mb-3 d-md-none no-print" data-view="bayar">
+      <button type="button" class="btn btn-outline-primary flex-fill px-1" data-pilih="spp" onclick="pilihBayar('spp')">SPP</button>
+      <button type="button" class="btn btn-outline-warning flex-fill px-1" data-pilih="kd" onclick="pilihBayar('kd')">Kost Dapur</button>
+      <button type="button" class="btn btn-outline-info flex-fill px-1" data-pilih="du" onclick="pilihBayar('du')">Daftar Ulang</button>
+      <button type="button" class="btn btn-outline-success flex-fill px-1" data-pilih="setor" onclick="pilihBayar('setor')">Setor</button>
+    </div>
+    <div class="d-md-none mb-3 no-print" data-view="santri">
+      <button type="button" id="btnTambahSantri" class="btn btn-success w-100 fw-bold" onclick="toggleFormSantri()"><i class="bi bi-person-plus-fill"></i> Tambah Santri Baru</button>
+    </div>
+
+    <!-- 4. FORM INPUT DATA -->
+    <div class="row g-4 mb-4 no-print">
+      <!-- Form Santri -->
+      <div class="col-md-6 col-xl santri-form-closed" id="colFormSantri" data-view="santri">
+        <div class="card card-custom p-3 bg-white h-100">
+          <h6 class="text-success mb-3 fw-bold"><i class="bi bi-person-plus-fill"></i> Form Data Santri</h6>
+          <form id="formSantri" onsubmit="triggerPasswordModal(event, 'simpanSantri', 'formSantri', 'btnSantri')">
+            <input type="hidden" id="santriRowId">
+            <div class="mb-2">
+              <label class="form-label small">Nama Lengkap</label>
+              <input type="text" id="nama" class="form-control form-control-sm" required>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">NIS (Nomor Induk) *</label>
+              <input type="text" id="nisn" class="form-control form-control-sm" required>
+            </div>
+            <div class="row mb-2">
+              <div class="col">
+                <label class="form-label small">Kelas</label>
+                <select id="kelas" class="form-select form-select-sm" required>
+                  <option value="1">Kelas 1</option>
+                  <option value="2">Kelas 2</option>
+                  <option value="3">Kelas 3</option>
+                  <option value="1Int">Kelas 1Int</option>
+                  <option value="4">Kelas 4</option>
+                  <option value="5">Kelas 5</option>
+                  <option value="6">Kelas 6</option>
+                </select>
+              </div>
+              <div class="col">
+                <label class="form-label small">Kamar</label>
+                <input type="text" id="kamar" class="form-control form-control-sm">
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">Nama Wali</label>
+              <input type="text" id="wali" class="form-control form-control-sm">
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">No. HP Wali</label>
+              <input type="text" id="nohp" class="form-control form-control-sm" inputmode="tel">
+            </div>
+            <div class="row mb-1">
+              <div class="col">
+                <label class="form-label small">Tarif SPP/bulan</label>
+                <input type="number" min="0" id="tarifSpp" class="form-control form-control-sm" placeholder="Standar">
+              </div>
+              <div class="col">
+                <label class="form-label small">Tarif KD/pekan</label>
+                <input type="number" min="0" id="tarifKd" class="form-control form-control-sm" placeholder="Standar">
+              </div>
+            </div>
+            <div class="mb-1"><label class="form-label small">Tarif Daftar Ulang</label><input type="number" min="0" id="tarifDu" class="form-control form-control-sm" placeholder="Standar"></div>
+            <div class="form-text mb-2">Kosongkan = tarif standar, isi 0 = gratis. Jika tarif diubah, tagihan belum lunas santri ini ikut disesuaikan (gratis = tagihan belum lunas dibatalkan).</div>
+            <div class="mb-3">
+              <label class="form-label small">Status</label>
+              <select id="santriStatus" class="form-select form-select-sm">
+                <option value="Aktif">Aktif</option>
+                <option value="Menunggak">Menunggak</option>
+                <option value="Non-Aktif">Non-Aktif</option>
+              </select>
+            </div>
+            <button type="submit" id="btnSantri" class="btn btn-success w-100 btn-sm fw-bold">Simpan Santri</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Form SPP -->
+      <div class="col-md-6 col-xl" data-view="bayar" data-bayar="spp">
+        <div class="card card-custom p-3 bg-white h-100">
+          <h6 class="text-primary mb-3 fw-bold"><i class="bi bi-credit-card-fill"></i> Form SPP (Bulanan)</h6>
+          <form id="formSPP" onsubmit="triggerPasswordModal(event, 'simpanSPP', 'formSPP', 'btnSPP')">
+            <input type="hidden" id="sppRowId">
+            <div class="mb-2">
+              <label class="form-label small text-secondary">Pilih Kelas</label>
+              <select id="sppKelasFilter" class="form-select form-select-sm" onchange="onKelasChange('sppKelasFilter', 'sppSantri')">
+                <option value="">-- Semua Kelas --</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small text-secondary">Nama Santri</label>
+              <input type="search" id="sppCari" class="form-control form-control-sm mb-1" placeholder="Ketik nama / NIS untuk mencari..." oninput="renderSantriOptions('sppSantri')" autocomplete="off">
+              <select id="sppSantri" class="form-select form-select-sm" required>
+                <option value="">-- Pilih Santri --</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">Bulan (Tahun Ajaran)</label>
+              <select id="sppBulan" class="form-select form-select-sm">
+                <option selected>Juli</option><option>Agustus</option><option>September</option><option>Oktober</option>
+                <option>November</option><option>Desember</option><option>Januari</option><option>Februari</option>
+                <option>Maret</option><option>April</option><option>Mei</option><option>Juni</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">Nominal (Rp)</label>
+              <input type="number" id="sppNominal" class="form-control form-control-sm" value="150000" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small">Status</label>
+              <select id="sppStatus" class="form-select form-select-sm">
+                <option value="Lunas">Lunas</option>
+                <option value="Belum Lunas">Belum Lunas</option>
+              </select>
+            </div>
+            <button type="submit" id="btnSPP" class="btn btn-primary w-100 btn-sm fw-bold">Simpan SPP</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Form Kost Dapur -->
+      <div class="col-md-6 col-xl" data-view="bayar" data-bayar="kd">
+        <div class="card card-custom p-3 bg-white h-100">
+          <h6 class="text-warning mb-3 fw-bold"><i class="bi bi-cup-hot-fill"></i> Form Kost Dapur (Pekan)</h6>
+          <form id="formKD" onsubmit="triggerPasswordModal(event, 'simpanKostDapur', 'formKD', 'btnKD')">
+            <input type="hidden" id="kdRowId">
+            <div class="mb-2">
+              <label class="form-label small text-secondary">Pilih Kelas</label>
+              <select id="kdKelasFilter" class="form-select form-select-sm" onchange="onKelasChange('kdKelasFilter', 'kdSantri')">
+                <option value="">-- Semua Kelas --</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small text-secondary">Nama Santri</label>
+              <input type="search" id="kdCari" class="form-control form-control-sm mb-1" placeholder="Ketik nama / NIS untuk mencari..." oninput="renderSantriOptions('kdSantri')" autocomplete="off">
+              <select id="kdSantri" class="form-select form-select-sm" required>
+                <option value="">-- Pilih Santri --</option>
+              </select>
+            </div>
+            <div class="row mb-2">
+              <div class="col">
+                <label class="form-label small">Bulan</label>
+                <select id="kdBulan" class="form-select form-select-sm">
+                  <option value="">-</option>
+                  <option selected>Juli</option><option>Agustus</option><option>September</option><option>Oktober</option>
+                  <option>November</option><option>Desember</option><option>Januari</option><option>Februari</option>
+                  <option>Maret</option><option>April</option><option>Mei</option><option>Juni</option>
+                </select>
+              </div>
+              <div class="col">
+                <label class="form-label small">Pekan</label>
+                <select id="kdPekan" class="form-select form-select-sm">
+                  <option>Pekan 1</option><option>Pekan 2</option><option>Pekan 3</option><option>Pekan 4</option><option>Pekan 5</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">Nominal (Rp)</label>
+              <input type="number" id="kdNominal" class="form-control form-control-sm" value="150000" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small">Status</label>
+              <select id="kdStatus" class="form-select form-select-sm">
+                <option value="Lunas">Lunas</option>
+                <option value="Belum Lunas">Belum Lunas</option>
+              </select>
+            </div>
+            <button type="submit" id="btnKD" class="btn btn-warning text-white w-100 btn-sm fw-bold">Simpan Kost Dapur</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Form Daftar Ulang -->
+      <div class="col-md-6 col-xl" data-view="bayar" data-bayar="du">
+        <div class="card card-custom p-3 bg-white h-100">
+          <h6 class="text-info mb-3 fw-bold"><i class="bi bi-mortarboard-fill"></i> Form Daftar Ulang</h6>
+          <form id="formDU" onsubmit="triggerPasswordModal(event, 'simpanDaftarUlang', 'formDU', 'btnDU')">
+            <input type="hidden" id="duRowId">
+            <div class="mb-2">
+              <label class="form-label small text-secondary">Pilih Kelas</label>
+              <select id="duKelasFilter" class="form-select form-select-sm" onchange="onKelasChange('duKelasFilter', 'duSantri')">
+                <option value="">-- Semua Kelas --</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small text-secondary">Nama Santri</label>
+              <input type="search" id="duCari" class="form-control form-control-sm mb-1" placeholder="Ketik nama / NIS untuk mencari..." oninput="renderSantriOptions('duSantri')" autocomplete="off">
+              <select id="duSantri" class="form-select form-select-sm" required>
+                <option value="">-- Pilih Santri --</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">Tahun Ajaran</label>
+              <input type="text" id="duPeriode" class="form-control form-control-sm" placeholder="2026/2027" required>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">Nominal (Rp)</label>
+              <input type="number" id="duNominal" class="form-control form-control-sm" value="500000" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small">Status</label>
+              <select id="duStatus" class="form-select form-select-sm">
+                <option value="Lunas">Lunas</option>
+                <option value="Belum Lunas">Belum Lunas</option>
+              </select>
+            </div>
+            <button type="submit" id="btnDU" class="btn btn-info text-white w-100 btn-sm fw-bold">Simpan Daftar Ulang</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Form Setoran ke Bendahara -->
+      <div class="col-md-6 col-xl" data-view="bayar" data-bayar="setor">
+        <div class="card card-custom p-3 bg-white h-100 border-start border-4 border-success">
+          <h6 class="text-success mb-3 fw-bold"><i class="bi bi-box-arrow-up-right"></i> Setor ke Bendahara</h6>
+          <form id="formSetor" onsubmit="triggerPasswordModal(event, 'simpanSetoran', 'formSetor', 'btnSetor')">
+            <div class="mb-2">
+              <label class="form-label small">Nominal Setoran (Rp)</label>
+              <input type="number" id="setorNominal" class="form-control form-control-sm" placeholder="Masukkan Nominal" required>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">Nama Bendahara / Penerima</label>
+              <input type="text" id="setorPenerima" class="form-control form-control-sm" placeholder="Nama Bendahara" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small">Keterangan / Catatan</label>
+              <textarea id="setorKeterangan" class="form-control form-control-sm" rows="3" placeholder="Contoh: Setoran SPP & KD Pekan 2"></textarea>
+            </div>
+            <button type="submit" id="btnSetor" class="btn btn-outline-success w-100 btn-sm fw-bold">Input Setoran</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. PENCARIAN & FILTER TABEL -->
+    <div class="card card-custom p-3 bg-white mb-4 no-print" data-view="riwayat santri">
+      <div class="row g-2 align-items-center">
+        <div class="col-md-5">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" id="searchKeyword" class="form-control" placeholder="Cari nama, ID, bulan, kelas..." onkeyup="loadDashboard()">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <select id="tableKelasFilter" class="form-select form-select-sm" onchange="loadDashboard()">
+            <option value="SEMUA">-- Filter Per Kelas --</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <select id="statusFilter" class="form-select form-select-sm" onchange="loadDashboard()">
+            <option value="SEMUA">-- Filter Status Pembayaran --</option>
+            <option value="LUNAS">Tampilkan: LUNAS / AKTIF</option>
+            <option value="BELUM LUNAS">Tampilkan: BELUM LUNAS / MENUNGGAK</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. TABEL DATA REAL-TIME -->
+    <div class="card card-custom p-4 bg-white" data-view="riwayat santri">
+      <h5 class="text-dark mb-3"><i class="bi bi-table"></i> Live Data & Riwayat Terakhir</h5>
+      
+      <ul class="nav nav-tabs mb-3 no-print" id="myTab" role="tablist">
+        <li class="nav-item" id="li-tab-santri">
+          <button class="nav-link active text-success" id="tab-santri" data-bs-toggle="tab" data-bs-target="#santriTab" type="button">Data Santri</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link text-primary" id="tab-spp" data-bs-toggle="tab" data-bs-target="#sppTab" type="button">Riwayat SPP</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link text-warning" id="tab-kd" data-bs-toggle="tab" data-bs-target="#kdTab" type="button">Riwayat Kost Dapur</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link text-success" id="tab-du" data-bs-toggle="tab" data-bs-target="#duTab" type="button">Riwayat Daftar Ulang</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link text-info fw-bold" id="tab-setor" data-bs-toggle="tab" data-bs-target="#setorTab" type="button"><i class="bi bi-journal-check"></i> Buku Setoran Admin</button>
+        </li>
+      </ul>
+
+      <div class="tab-content" id="myTabContent">
+        <!-- Tabel Santri -->
+        <div class="tab-pane fade show active" id="santriTab">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 p-2 bg-light rounded border no-print">
+            <div>
+              <button class="btn btn-outline-secondary btn-sm me-2 fw-bold" onclick="bukaNisGanda()"><i class="bi bi-search"></i> Cek NIS Ganda</button>
+              <button class="btn btn-outline-success btn-sm me-2 fw-bold" onclick="downloadExcelSantri()">
+                <i class="bi bi-file-earmark-excel-fill"></i> Export Excel/CSV
+              </button>
+              <label class="btn btn-outline-primary btn-sm fw-bold mb-0">
+                <i class="bi bi-file-earmark-arrow-up-fill"></i> Import CSV
+                <input type="file" id="fileImportCSV" accept=".csv" style="display: none;" onchange="handleImportCSV(event)">
+              </label>
+            </div>
+            <div>
+              <button class="btn btn-outline-danger btn-sm fw-bold" onclick="triggerHapusSeluruhSantri()">
+                <i class="bi bi-trash-fill"></i> Hapus Seluruh Santri
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+              <thead class="table-light">
+                <tr><th>Nama Lengkap</th><th>NIS</th><th>Kelas</th><th>Kamar</th><th>Wali Santri</th><th>No HP</th><th>Status</th><th>Tarif SPP</th><th>Tarif KD</th><th>Tarif DU</th><th class="no-print">Aksi</th></tr>
+              </thead>
+              <tbody id="tblSantri"><tr><td colspan="8" class="text-center text-muted">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Tabel SPP -->
+        <div class="tab-pane fade" id="sppTab">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+              <thead class="table-light">
+                <tr><th>ID Trx</th><th>Tanggal</th><th>ID Santri</th><th>Nama Santri</th><th>Bulan</th><th>Nominal</th><th>Status</th><th class="no-print">Aksi</th></tr>
+              </thead>
+              <tbody id="tblSPP"><tr><td colspan="8" class="text-center text-muted">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tabel Kost Dapur -->
+        <div class="tab-pane fade" id="kdTab">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+              <thead class="table-light">
+                <tr><th>ID Trx</th><th>Tanggal</th><th>NIS</th><th>Nama Santri</th><th>Pekan</th><th>Nominal</th><th>Status</th><th class="no-print">Aksi</th></tr>
+              </thead>
+              <tbody id="tblKD"><tr><td colspan="7" class="text-center text-muted">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tabel Daftar Ulang -->
+        <div class="tab-pane fade" id="duTab">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+              <thead class="table-light">
+                <tr><th>ID Trx</th><th>Tanggal</th><th>NIS</th><th>Nama Santri</th><th>Tahun Ajaran</th><th>Nominal</th><th>Status</th><th class="no-print">Aksi</th></tr>
+              </thead>
+              <tbody id="tblDU"><tr><td colspan="7" class="text-center text-muted">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tabel Buku Setoran -->
+        <div class="tab-pane fade" id="setorTab">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+              <thead class="table-light">
+                <tr><th>ID Setoran</th><th>Tanggal</th><th>Nominal Disetor</th><th>Penerima (Bendahara)</th><th>Keterangan</th><th class="no-print">Aksi</th></tr>
+              </thead>
+              <tbody id="tblSetor"><tr><td colspan="6" class="text-center text-muted">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+    <!-- NAVIGASI BAWAH (khusus HP) -->
+    <nav id="bottomNav" class="no-print" aria-label="Navigasi utama">
+      <button class="bn-item active" data-go="home" onclick="goView('home')"><i class="bi bi-house-door-fill"></i><span>Beranda</span></button>
+      <button class="bn-item" data-go="bayar" onclick="goView('bayar')"><i class="bi bi-wallet2"></i><span>Bayar</span></button>
+      <button class="bn-item" data-go="riwayat" onclick="goView('riwayat')"><i class="bi bi-clock-history"></i><span>Riwayat</span></button>
+      <button class="bn-item" data-go="santri" onclick="goView('santri')"><i class="bi bi-people-fill"></i><span>Santri</span></button>
+      <button class="bn-item" data-go="menu" onclick="goView('menu')"><i class="bi bi-grid-fill"></i><span>Menu</span></button>
+    </nav>
+</div>
+
+<!-- MODAL PASSWORD ADMIN UNTUK AKSI SENSITIF -->
+<div class="modal fade" id="passModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white py-2">
+        <h6 class="modal-title"><i class="bi bi-shield-lock-fill"></i> Verifikasi Password</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small text-muted mb-2">Masukkan Password Admin untuk konfirmasi tindakan:</p>
+        <input type="password" id="adminPasswordInput" class="form-control form-control-sm" placeholder="Password Admin" required>
+      </div>
+      <div class="modal-footer py-1">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-success btn-sm" onclick="executePendingAction()">Konfirmasi</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CEK NIS GANDA -->
+<div class="modal fade" id="nisModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-fullscreen-md-down modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white py-2">
+        <h6 class="modal-title"><i class="bi bi-people-fill"></i> Pemeriksaan NIS Ganda</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body" id="nisBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TRANSAKSI TANPA NIS -->
+<div class="modal fade" id="trxModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-fullscreen-md-down modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white py-2">
+        <h6 class="modal-title"><i class="bi bi-list-check"></i> Transaksi Belum Terhubung ke NIS</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body" id="trxBody"></div>
+      <div class="modal-footer py-2"><button class="btn btn-primary w-100 fw-bold" onclick="simpanTrxNis()"><i class="bi bi-link-45deg"></i> Hubungkan semua yang sudah dipilih</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PENGINGAT WHATSAPP -->
+<div class="modal fade" id="waModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-fullscreen-md-down modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white py-2">
+        <h6 class="modal-title"><i class="bi bi-whatsapp"></i> Pengingat Tunggakan ke Wali Santri</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-2 mb-2">
+          <div class="col-md-6"><input type="text" id="waCari" class="form-control form-control-sm" placeholder="Cari nama santri..." oninput="renderPengingatWA()"></div>
+          <div class="col-md-6"><select id="waKelas" class="form-select form-select-sm" onchange="muatPengingatWA()"></select></div>
+        </div>
+        <div class="small text-muted mb-2">Klik "Kirim WA" untuk membuka WhatsApp dengan pesan yang sudah terisi. Pesan dikirim manual dari WhatsApp Anda.</div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead class="table-light"><tr><th>Santri</th><th>Kelas</th><th>Wali</th><th>Tunggakan</th><th>Aksi</th></tr></thead>
+            <tbody id="waBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
