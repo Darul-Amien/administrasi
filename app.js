@@ -105,7 +105,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Pilih santri -> nominal terisi otomatis sesuai tarif santri tersebut (hanya untuk transaksi baru)
   ['spp', 'kd', 'du'].forEach(k => document.getElementById(k + 'Santri').addEventListener('change', function () {
     if (document.getElementById(k + 'RowId').value || !this.value) return;
-    api().withSuccessHandler(t => { document.getElementById(k + 'Nominal').value = t[k]; }).getTarifSantri(this.value);
+    const nom = document.getElementById(k + 'Nominal');
+    nom.value = ''; nom.placeholder = 'memuat tarif...';
+    api().withSuccessHandler(t => { nom.value = t[k]; nom.placeholder = ''; })
+         .withFailureHandler(() => { nom.placeholder = 'isi nominal manual'; })
+         .getTarifSantri(this.value);
   }));
 });
 
@@ -590,8 +594,12 @@ function renderTable(elementId, rows, rowTemplate) {
 
 function triggerPasswordModal(e, backendFunc, formId, btnId) {
   e.preventDefault();
+  // Pembayaran BARU (SPP / Kost Dapur / Daftar Ulang / Setoran) tidak perlu password.
+  // Mengubah transaksi yang sudah ada, data santri, dan hapus tetap minta password.
+  const rowIdEl = { formSPP: 'sppRowId', formKD: 'kdRowId', formDU: 'duRowId' }[formId];
+  const tanpaPassword = formId === 'formSetor' || (!!rowIdEl && !document.getElementById(rowIdEl).value);
   pendingAction = () => {
-    const pass = document.getElementById('adminPasswordInput').value;
+    const pass = tanpaPassword ? '' : document.getElementById('adminPasswordInput').value;
     const btn = document.getElementById(btnId);
     btn.disabled = true;
 
@@ -647,7 +655,7 @@ function triggerPasswordModal(e, backendFunc, formId, btnId) {
       .withSuccessHandler((res) => {
         showAlert(res.message, res.success);
         if (res.success) {
-          document.getElementById(formId).reset();
+          resetFormBayar_(formId);
           if (formId === 'formSantri') toggleFormSantri(false);
           btn.innerText = btn.dataset.lbl || btn.innerText;
           document.querySelectorAll('input[type="hidden"]').forEach(el => el.value = '');
@@ -662,8 +670,23 @@ function triggerPasswordModal(e, backendFunc, formId, btnId) {
       [backendFunc](data, pass);
   };
 
+  if (tanpaPassword) { const aksi = pendingAction; pendingAction = null; aksi(); return; }
   document.getElementById('adminPasswordInput').value = '';
   passModalObj.show();
+}
+
+// Setelah simpan: form pembayaran TIDAK dikosongkan semua. Bulan / pekan / tahun ajaran tetap,
+// hanya santri yang dikosongkan, supaya input santri berikutnya cepat.
+function resetFormBayar_(formId) {
+  const k = { formSPP: 'spp', formKD: 'kd', formDU: 'du' }[formId];
+  if (!k) { document.getElementById(formId).reset(); return; }
+  document.getElementById(k + 'RowId').value = '';
+  document.getElementById(k + 'Status').value = 'Lunas';
+  document.getElementById(k + 'Nominal').value = '';
+  document.getElementById(k + 'Cari').value = '';
+  document.getElementById(k + 'Santri').value = '';
+  renderSantriOptions(k + 'Santri');
+  document.getElementById(k + 'Cari').focus();
 }
 
 function promptHapus(sheetName, rowId) {
@@ -937,7 +960,7 @@ function renderSantriOptions(selectId) {
   const q = cari ? cari.value.trim().toLowerCase() : '';
   const prev = String(sel.value || '');
   const f = q ? list.filter(s => (String(s.nama) + ' ' + String(s.nis)).toLowerCase().includes(q)) : list;
-  sel.innerHTML = '<option value="">-- Pilih Santri --</option>' + f.map(sn => `<option value="${esc(sn.nis)}">${esc(sn.nama)} (${esc(sn.nis)})</option>`).join('');
+  sel.innerHTML = '<option value="">-- Pilih Santri --</option>' + f.map(sn => `<option value="${esc(sn.nis)}">${esc(sn.nama)} (${esc(sn.nis)})${sn.kelas ? ' - Kls ' + esc(sn.kelas) : ''}</option>`).join('');
   if (q && f.length === 1) {                       // tinggal satu hasil -> langsung terpilih
     sel.value = f[0].nis;
     if (prev !== String(f[0].nis)) sel.dispatchEvent(new Event('change'));
