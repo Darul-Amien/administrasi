@@ -405,7 +405,7 @@
           <h6 class="text-primary mb-3 fw-bold"><i class="bi bi-credit-card-fill"></i> Form SPP (Bulanan)</h6>
           <form id="formSPP" onsubmit="triggerPasswordModal(event, 'simpanSPP', 'formSPP', 'btnSPP')">
             <input type="hidden" id="sppRowId">
-            <div class="mb-2">
+            <div class="mb-2 d-none">
               <label class="form-label small text-secondary">Pilih Kelas</label>
               <select id="sppKelasFilter" class="form-select form-select-sm" onchange="onKelasChange('sppKelasFilter', 'sppSantri')">
                 <option value="">-- Semua Kelas --</option>
@@ -413,7 +413,7 @@
             </div>
             <div class="mb-2">
               <label class="form-label small text-secondary">Nama Santri</label>
-              <input type="search" id="sppCari" class="form-control form-control-sm mb-1" placeholder="Ketik nama / NIS untuk mencari..." oninput="renderSantriOptions('sppSantri')" autocomplete="off">
+              <input type="search" id="sppCari" class="form-control form-control-sm mb-1" placeholder="Ketik nama / NIS santri..." oninput="renderSantriOptions('sppSantri')" autocomplete="off">
               <select id="sppSantri" class="form-select form-select-sm" required>
                 <option value="">-- Pilih Santri --</option>
               </select>
@@ -448,7 +448,7 @@
           <h6 class="text-warning mb-3 fw-bold"><i class="bi bi-cup-hot-fill"></i> Form Kost Dapur (Pekan)</h6>
           <form id="formKD" onsubmit="triggerPasswordModal(event, 'simpanKostDapur', 'formKD', 'btnKD')">
             <input type="hidden" id="kdRowId">
-            <div class="mb-2">
+            <div class="mb-2 d-none">
               <label class="form-label small text-secondary">Pilih Kelas</label>
               <select id="kdKelasFilter" class="form-select form-select-sm" onchange="onKelasChange('kdKelasFilter', 'kdSantri')">
                 <option value="">-- Semua Kelas --</option>
@@ -456,7 +456,7 @@
             </div>
             <div class="mb-2">
               <label class="form-label small text-secondary">Nama Santri</label>
-              <input type="search" id="kdCari" class="form-control form-control-sm mb-1" placeholder="Ketik nama / NIS untuk mencari..." oninput="renderSantriOptions('kdSantri')" autocomplete="off">
+              <input type="search" id="kdCari" class="form-control form-control-sm mb-1" placeholder="Ketik nama / NIS santri..." oninput="renderSantriOptions('kdSantri')" autocomplete="off">
               <select id="kdSantri" class="form-select form-select-sm" required>
                 <option value="">-- Pilih Santri --</option>
               </select>
@@ -500,7 +500,7 @@
           <h6 class="text-info mb-3 fw-bold"><i class="bi bi-mortarboard-fill"></i> Form Daftar Ulang</h6>
           <form id="formDU" onsubmit="triggerPasswordModal(event, 'simpanDaftarUlang', 'formDU', 'btnDU')">
             <input type="hidden" id="duRowId">
-            <div class="mb-2">
+            <div class="mb-2 d-none">
               <label class="form-label small text-secondary">Pilih Kelas</label>
               <select id="duKelasFilter" class="form-select form-select-sm" onchange="onKelasChange('duKelasFilter', 'duSantri')">
                 <option value="">-- Semua Kelas --</option>
@@ -508,7 +508,7 @@
             </div>
             <div class="mb-2">
               <label class="form-label small text-secondary">Nama Santri</label>
-              <input type="search" id="duCari" class="form-control form-control-sm mb-1" placeholder="Ketik nama / NIS untuk mencari..." oninput="renderSantriOptions('duSantri')" autocomplete="off">
+              <input type="search" id="duCari" class="form-control form-control-sm mb-1" placeholder="Ketik nama / NIS santri..." oninput="renderSantriOptions('duSantri')" autocomplete="off">
               <select id="duSantri" class="form-select form-select-sm" required>
                 <option value="">-- Pilih Santri --</option>
               </select>
