@@ -63,6 +63,17 @@
     </div>
   </nav>
 
+  <nav id="bottomNav" class="no-print" aria-label="Navigasi utama">
+    <button class="bn-item active" data-go="home" onclick="goView('home')"><i class="bi bi-house-door-fill"></i><span>Beranda</span></button>
+    <button class="bn-item" data-go="spp" onclick="goView('spp')"><i class="bi bi-credit-card-fill"></i><span>SPP</span></button>
+    <button class="bn-item" data-go="kd" onclick="goView('kd')"><i class="bi bi-cup-hot-fill"></i><span>Kost Dapur</span></button>
+    <button class="bn-item" data-go="du" onclick="goView('du')"><i class="bi bi-mortarboard-fill"></i><span>Daftar Ulang</span></button>
+    <button class="bn-item" data-go="santri" onclick="goView('santri')"><i class="bi bi-people-fill"></i><span>Santri</span></button>
+    <button class="bn-item d-none d-md-flex" data-go="riwayat" onclick="goView('riwayat')"><i class="bi bi-clock-history"></i><span>Riwayat</span></button>
+    <button class="bn-item d-none d-md-flex" data-go="setor" onclick="goView('setor')"><i class="bi bi-box-arrow-up-right"></i><span>Setoran</span></button>
+    <button class="bn-item" data-go="menu" onclick="goView('menu')"><i class="bi bi-grid-fill"></i><span>Menu</span></button>
+  </nav>
+
   <div class="container pb-5">
     <div id="alertBox" class="alert d-none mb-4 no-print" role="alert"></div>
     <div id="bannerNIS" data-view="home" class="alert alert-warning d-none mb-4 no-print d-flex flex-wrap gap-2 align-items-center justify-content-between" role="alert">
@@ -233,6 +244,8 @@
     <!-- MENU LAINNYA (khusus HP) -->
     <div class="card card-custom bg-white mb-3 d-md-none no-print" data-view="menu">
       <div class="list-group list-group-flush rounded">
+        <button class="list-group-item list-group-item-action py-3" onclick="goView('riwayat')"><i class="bi bi-clock-history me-2"></i> Riwayat Transaksi</button>
+        <button class="list-group-item list-group-item-action py-3" onclick="goView('setor')"><i class="bi bi-box-arrow-up-right text-success me-2"></i> Setor ke Bendahara</button>
         <button class="list-group-item list-group-item-action py-3" onclick="bukaPengingatWA()"><i class="bi bi-whatsapp text-success me-2"></i> Pengingat Tunggakan ke Wali (WA)</button>
         <button class="list-group-item list-group-item-action py-3" onclick="syncStatusSantri()"><i class="bi bi-arrow-repeat text-warning me-2"></i> Cek Status Menunggak</button>
         <button class="list-group-item list-group-item-action py-3" onclick="bukaNisGanda()"><i class="bi bi-search text-danger me-2"></i> Cek NIS Ganda</button>
@@ -244,7 +257,7 @@
     </div>
 
     <!-- 3. TOMBOL GENERATE TAGIHAN MASAL -->
-    <div class="card card-custom p-3 bg-white mb-4 no-print border-start border-4 border-info" data-view="menu">
+    <div class="card card-custom p-3 bg-white mb-4 no-print border-start border-4 border-info" data-view="spp kd du">
       <div class="row align-items-center g-2">
         <div class="col-md-4">
           <h6 class="fw-bold text-dark mb-0"><i class="bi bi-magic text-info"></i> Buat Tagihan Masal (Belum Lunas)</h6>
@@ -322,15 +335,14 @@
     </div>
 
     <!-- PILIH JENIS TRANSAKSI (khusus HP) -->
-    <div id="segBayar" class="d-flex gap-1 mb-3 d-md-none no-print" data-view="bayar">
-      <button type="button" class="btn btn-outline-primary flex-fill px-1" data-pilih="spp" onclick="pilihBayar('spp')">SPP</button>
-      <button type="button" class="btn btn-outline-warning flex-fill px-1" data-pilih="kd" onclick="pilihBayar('kd')">Kost Dapur</button>
-      <button type="button" class="btn btn-outline-info flex-fill px-1" data-pilih="du" onclick="pilihBayar('du')">Daftar Ulang</button>
-      <button type="button" class="btn btn-outline-success flex-fill px-1" data-pilih="setor" onclick="pilihBayar('setor')">Setor</button>
-    </div>
-    <div class="d-md-none mb-3 no-print" data-view="santri">
+    <div class="mb-3 no-print" data-view="santri">
       <button type="button" id="btnTambahSantri" class="btn btn-success w-100 fw-bold" onclick="toggleFormSantri()"><i class="bi bi-person-plus-fill"></i> Tambah Santri Baru</button>
     </div>
+
+    <div id="pg-spp" data-view="spp" class="no-print"></div>
+    <div id="pg-kd" data-view="kd" class="no-print"></div>
+    <div id="pg-du" data-view="du" class="no-print"></div>
+    <div id="undoBar" class="alert alert-success d-none shadow d-flex align-items-center justify-content-between gap-2 mb-0 py-2 no-print"><span id="undoTeks" class="small fw-semibold"></span><button class="btn btn-sm btn-dark flex-shrink-0" onclick="batalkanTerakhir()">Batalkan</button></div>
 
     <!-- 4. FORM INPUT DATA -->
     <div class="row g-4 mb-4 no-print">
@@ -400,7 +412,7 @@
       </div>
 
       <!-- Form SPP -->
-      <div class="col-md-6 col-xl" data-view="bayar" data-bayar="spp">
+      <div class="col-md-6 col-xl manual-closed" data-view="spp" data-manual="spp">
         <div class="card card-custom p-3 bg-white h-100">
           <h6 class="text-primary mb-3 fw-bold"><i class="bi bi-credit-card-fill"></i> Form SPP (Bulanan)</h6>
           <form id="formSPP" onsubmit="triggerPasswordModal(event, 'simpanSPP', 'formSPP', 'btnSPP')">
@@ -443,7 +455,7 @@
       </div>
 
       <!-- Form Kost Dapur -->
-      <div class="col-md-6 col-xl" data-view="bayar" data-bayar="kd">
+      <div class="col-md-6 col-xl manual-closed" data-view="kd" data-manual="kd">
         <div class="card card-custom p-3 bg-white h-100">
           <h6 class="text-warning mb-3 fw-bold"><i class="bi bi-cup-hot-fill"></i> Form Kost Dapur (Pekan)</h6>
           <form id="formKD" onsubmit="triggerPasswordModal(event, 'simpanKostDapur', 'formKD', 'btnKD')">
@@ -495,7 +507,7 @@
       </div>
 
       <!-- Form Daftar Ulang -->
-      <div class="col-md-6 col-xl" data-view="bayar" data-bayar="du">
+      <div class="col-md-6 col-xl manual-closed" data-view="du" data-manual="du">
         <div class="card card-custom p-3 bg-white h-100">
           <h6 class="text-info mb-3 fw-bold"><i class="bi bi-mortarboard-fill"></i> Form Daftar Ulang</h6>
           <form id="formDU" onsubmit="triggerPasswordModal(event, 'simpanDaftarUlang', 'formDU', 'btnDU')">
@@ -534,7 +546,7 @@
       </div>
 
       <!-- Form Setoran ke Bendahara -->
-      <div class="col-md-6 col-xl" data-view="bayar" data-bayar="setor">
+      <div class="col-md-6 col-xl" data-view="setor">
         <div class="card card-custom p-3 bg-white h-100 border-start border-4 border-success">
           <h6 class="text-success mb-3 fw-bold"><i class="bi bi-box-arrow-up-right"></i> Setor ke Bendahara</h6>
           <form id="formSetor" onsubmit="triggerPasswordModal(event, 'simpanSetoran', 'formSetor', 'btnSetor')">
@@ -685,14 +697,6 @@
 
   </div>
 
-    <!-- NAVIGASI BAWAH (khusus HP) -->
-    <nav id="bottomNav" class="no-print" aria-label="Navigasi utama">
-      <button class="bn-item active" data-go="home" onclick="goView('home')"><i class="bi bi-house-door-fill"></i><span>Beranda</span></button>
-      <button class="bn-item" data-go="bayar" onclick="goView('bayar')"><i class="bi bi-wallet2"></i><span>Bayar</span></button>
-      <button class="bn-item" data-go="riwayat" onclick="goView('riwayat')"><i class="bi bi-clock-history"></i><span>Riwayat</span></button>
-      <button class="bn-item" data-go="santri" onclick="goView('santri')"><i class="bi bi-people-fill"></i><span>Santri</span></button>
-      <button class="bn-item" data-go="menu" onclick="goView('menu')"><i class="bi bi-grid-fill"></i><span>Menu</span></button>
-    </nav>
 </div>
 
 <!-- MODAL PASSWORD ADMIN UNTUK AKSI SENSITIF -->
