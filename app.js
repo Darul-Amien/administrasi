@@ -924,15 +924,17 @@ function goView(v) {
     const aktif = document.querySelector('#myTab .nav-link.active');
     if (!aktif || aktif.id === 'tab-santri') bootstrap.Tab.getOrCreateInstance(document.getElementById('tab-spp')).show();
   }
+  if (CK[v]) muatHalaman(v);
   window.scrollTo({ top: 0 });
 }
 
-function pilihBayar(k) {
+function pilihBayar_lama(k) {
   document.querySelectorAll('[data-bayar]').forEach(el => el.classList.toggle('bayar-hide', el.dataset.bayar !== k));
   document.querySelectorAll('#segBayar [data-pilih]').forEach(b => b.classList.toggle('active', b.dataset.pilih === k));
 }
 
-function mulaiBayar(k) { goView('bayar'); pilihBayar(k); }
+function pilihBayar() {}
+function mulaiBayar(k) { goView(k); }
 
 function toggleFormSantri(show) {
   const c = document.getElementById('colFormSantri');
@@ -945,10 +947,8 @@ function toggleFormSantri(show) {
 
 // Dipakai tombol Edit: di HP pindah ke tab/form yang sesuai, di desktop cukup scroll ke atas
 function irKeForm(k) {
-  if (isMobile()) {
-    if (k === 'santri') { goView('santri'); toggleFormSantri(true); }
-    else { goView('bayar'); pilihBayar(k); }
-  }
+  if (k === 'santri') { goView('santri'); toggleFormSantri(true); }
+  else { goView(k); toggleManual(k, true); }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1120,5 +1120,164 @@ function simpanTrxNis() {
 
 document.getElementById('passModal').addEventListener('shown.bs.modal', () => document.getElementById('adminPasswordInput').focus());
 if (isMobile()) document.getElementById('boxFilterTunggakan').classList.add('d-none');
+
+
+// -----------------------------------------------------------------------------
+// HALAMAN PEMBAYARAN DENGAN DAFTAR CENTANG (SPP / Kost Dapur / Daftar Ulang)
+// -----------------------------------------------------------------------------
+const BULAN = ['Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni'];
+const HAL = {
+  spp: { jenis: 'SPP', judul: 'SPP Bulanan', ico: 'credit-card-fill' },
+  kd:  { jenis: 'KD',  judul: 'Kost Dapur', ico: 'cup-hot-fill' },
+  du:  { jenis: 'DU',  judul: 'Daftar Ulang', ico: 'mortarboard-fill' }
+};
+const CK = {};
+const rpf = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+const v_ = id => document.getElementById(id).value;
+const bulanIni_ = () => ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][new Date().getMonth()];
+const tahunAjaran_ = () => { const d = new Date(), y = d.getFullYear(); return d.getMonth() >= 6 ? y + '/' + (y + 1) : (y - 1) + '/' + y; };
+
+function labelHal_(k) {
+  if (k === 'spp') return v_('ck-spp-bulan');
+  if (k === 'kd') return v_('ck-kd-bulan') + ' - ' + v_('ck-kd-pekan');
+  return v_('ck-du-periode').trim();
+}
+
+function buatHalaman(k) {
+  const h = HAL[k], opsiBulan = BULAN.map(b => `<option${b === bulanIni_() ? ' selected' : ''}>${b}</option>`).join('');
+  let kontrol = '';
+  if (k === 'spp') kontrol = `<div class="col-12"><select id="ck-spp-bulan" class="form-select">${opsiBulan}</select></div>`;
+  if (k === 'kd') kontrol = `<div class="col-7"><select id="ck-kd-bulan" class="form-select">${opsiBulan}</select></div>
+    <div class="col-5"><select id="ck-kd-pekan" class="form-select">${[1, 2, 3, 4, 5].map(p => `<option${p === Math.min(5, Math.ceil(new Date().getDate() / 7)) ? ' selected' : ''}>Pekan ${p}</option>`).join('')}</select></div>`;
+  if (k === 'du') kontrol = `<div class="col-12"><input id="ck-du-periode" class="form-control" value="${tahunAjaran_()}" placeholder="Tahun ajaran, mis. 2026/2027"></div>`;
+  CK[k] = { items: [], sel: new Set(), kelas: '', cari: '', lunas: false, label: '' };
+  const el = document.getElementById('pg-' + k);
+  el.innerHTML = `
+    <div class="card card-custom p-3 bg-white mb-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="fw-bold mb-0"><i class="bi bi-${h.ico}"></i> ${h.judul}</h6>
+        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleManual('${k}')">Input manual</button>
+      </div>
+      <div class="row g-2 mb-2">${kontrol}</div>
+      <div id="sum-${k}"></div>
+      <div id="chips-${k}" class="chips"></div>
+      <input type="search" class="form-control ck-cari mb-1" placeholder="Cari nama / NIS..." autocomplete="off">
+      <div class="form-check form-switch my-2"><input class="form-check-input ck-showlunas" type="checkbox" id="swl-${k}"><label class="form-check-label small" for="swl-${k}">Tampilkan yang sudah lunas</label></div>
+      <div id="list-${k}"></div>
+    </div>
+    <div id="bar-${k}" class="aksi-bar d-none"><div><div class="fw-bold" id="barN-${k}"></div><div class="small text-muted" id="barT-${k}"></div></div>
+      <button class="btn btn-success fw-bold px-4" id="btnSimpan-${k}" onclick="simpanCentang('${k}')"><i class="bi bi-check2-all"></i> Tandai Lunas</button></div>`;
+  el.querySelectorAll('select, #ck-du-periode').forEach(x => x.addEventListener('change', () => muatHalaman(k)));
+  el.addEventListener('click', e => {
+    const st = CK[k], c = e.target.closest('.chip');
+    if (c) { st.kelas = c.dataset.kelas; renderHalaman(k); return; }
+    const row = e.target.closest('.ck-row');
+    if (row && row.dataset.ref && e.target.tagName !== 'INPUT' && !row.classList.contains('lns')) { e.preventDefault(); toggleCentang_(k, row.dataset.ref); }
+  });
+  el.addEventListener('change', e => {
+    const st = CK[k];
+    if (e.target.classList.contains('ck-item')) toggleCentang_(k, e.target.closest('.ck-row').dataset.ref);
+    if (e.target.classList.contains('ck-showlunas')) { st.lunas = e.target.checked; renderHalaman(k); }
+    if (e.target.classList.contains('ck-all')) {
+      tampil_(k).filter(i => !i.lunas).forEach(i => e.target.checked ? st.sel.add(i.ref) : st.sel.delete(i.ref));
+      renderHalaman(k);
+    }
+  });
+  el.addEventListener('input', e => { if (e.target.classList.contains('ck-cari')) { CK[k].cari = e.target.value; renderHalaman(k); } });
+}
+
+function toggleCentang_(k, ref) {
+  const s = CK[k].sel; s.has(ref) ? s.delete(ref) : s.add(ref);
+  renderHalaman(k);
+}
+
+function tampil_(k) {
+  const st = CK[k], q = st.cari.trim().toLowerCase();
+  return st.items.filter(i => (!st.kelas || (i.kelas || '-') === st.kelas) && (!q || (i.nama + ' ' + i.nis).toLowerCase().includes(q)) && (st.lunas || !i.lunas));
+}
+
+function muatHalaman(k) {
+  const st = CK[k], label = labelHal_(k);
+  st.sel.clear(); st.kelas = ''; st.label = label;
+  if (!label) { st.items = []; return renderHalaman(k); }
+  document.getElementById('list-' + k).innerHTML = '<div class="text-center text-muted py-4">Memuat...</div>';
+  api().withSuccessHandler(res => {
+    if (labelHal_(k) !== label) return;
+    if (!res.success) showAlert(res.message, false);
+    st.items = res.success ? res.items : [];
+    renderHalaman(k);
+  }).getTagihanPeriode(HAL[k].jenis, label);
+}
+
+function renderHalaman(k) {
+  const st = CK[k], all = st.items, lns = all.filter(i => i.lunas);
+  const total = all.reduce((s, i) => s + i.nominal, 0), ter = lns.reduce((s, i) => s + i.nominal, 0);
+  const aktif = new Set(all.map(i => i.ref)); st.sel.forEach(r => { if (!aktif.has(r)) st.sel.delete(r); });
+  document.getElementById('sum-' + k).innerHTML = all.length
+    ? `<div class="d-flex justify-content-between small mb-1"><span><b>${lns.length}</b> dari ${all.length} santri lunas</span><span>${rpf(ter)} / ${rpf(total)}</span></div><div class="progress mb-2" style="height:8px"><div class="progress-bar bg-success" style="width:${total ? Math.round(ter / total * 100) : 0}%"></div></div>` : '';
+  const kls = [...new Set(all.map(i => i.kelas || '-'))];
+  document.getElementById('chips-' + k).innerHTML = all.length ? ['', ...kls].map(c => {
+    const belum = all.filter(i => (!c || (i.kelas || '-') === c) && !i.lunas).length;
+    return `<button type="button" class="chip${st.kelas === c ? ' on' : ''}" data-kelas="${esc(c)}">${c ? 'Kls ' + esc(c) : 'Semua'} <span>${belum || '✓'}</span></button>`;
+  }).join('') : '';
+  const rows = tampil_(k), belumTampil = rows.filter(i => !i.lunas);
+  let html = '';
+  if (!all.length) html = `<div class="text-center text-muted py-4">Belum ada tagihan untuk periode ini.<br><span class="small">Buat dulu lewat kartu "Buat Tagihan Masal" di bawah.</span></div>`;
+  else if (!rows.length) html = `<div class="text-center text-muted py-4">${all.some(i => !i.lunas) ? 'Tidak ada yang cocok.' : '🎉 Semua sudah lunas.'}</div>`;
+  else {
+    if (belumTampil.length) html += `<label class="ck-row" style="background:#f8f9fa"><input type="checkbox" class="form-check-input ck-all" ${belumTampil.every(i => st.sel.has(i.ref)) ? 'checked' : ''}><div class="ck-main fw-semibold">Pilih semua yang tampil (${belumTampil.length})</div></label>`;
+    html += rows.map(i => `<label class="ck-row${st.sel.has(i.ref) ? ' sel' : ''}${i.lunas ? ' lns' : ''}" data-ref="${esc(i.ref)}"><input type="checkbox" class="form-check-input ck-item" ${i.lunas ? 'checked disabled' : (st.sel.has(i.ref) ? 'checked' : '')}><div class="ck-main"><div class="ck-nama">${esc(i.nama)}</div><div class="ck-sub">${esc(i.nis)}${i.kelas ? ' · Kls ' + esc(i.kelas) : ''}${i.lunas ? ' · Lunas' : ''}</div></div><div class="ck-nom">${rpf(i.nominal)}</div></label>`).join('');
+  }
+  document.getElementById('list-' + k).innerHTML = html;
+  const pilih = all.filter(i => st.sel.has(i.ref));
+  document.getElementById('bar-' + k).classList.toggle('d-none', !pilih.length);
+  document.getElementById('barN-' + k).textContent = pilih.length + ' santri dipilih';
+  document.getElementById('barT-' + k).textContent = rpf(pilih.reduce((s, i) => s + i.nominal, 0));
+}
+
+function simpanCentang(k) {
+  const st = CK[k], pilih = st.items.filter(i => st.sel.has(i.ref));
+  if (!pilih.length) return;
+  const total = pilih.reduce((s, i) => s + i.nominal, 0);
+  if (!confirm(`Tandai LUNAS ${pilih.length} santri\n${HAL[k].judul} - ${st.label}\nTotal ${rpf(total)}\n\nLanjutkan?`)) return;
+  const btn = document.getElementById('btnSimpan-' + k); btn.disabled = true;
+  api().withSuccessHandler(res => {
+    btn.disabled = false;
+    showAlert(res.message, res.success);
+    if (res.success) tampilUndo_(res.message);
+    segarkanSetelahBayar_();
+  }).withFailureHandler(err => { btn.disabled = false; showAlert('Error: ' + err.message, false); })
+    .tandaiLunasBanyak(HAL[k].jenis, pilih.map(i => i.ref));
+}
+
+let undoTimer;
+function tampilUndo_(msg) {
+  const b = document.getElementById('undoBar');
+  document.getElementById('undoTeks').textContent = msg;
+  b.classList.remove('d-none');
+  clearTimeout(undoTimer); undoTimer = setTimeout(() => b.classList.add('d-none'), 300000);
+}
+
+function batalkanTerakhir() {
+  if (!confirm('Batalkan penandaan lunas yang terakhir?')) return;
+  api().withSuccessHandler(res => {
+    showAlert(res.message, res.success);
+    document.getElementById('undoBar').classList.add('d-none');
+    segarkanSetelahBayar_();
+  }).batalkanLunasTerakhir();
+}
+
+function segarkanSetelahBayar_() {
+  loadKasSummary(); loadDashboard(); loadJumlahSantri(); loadChartPersentase(); loadTunggakan();
+  const cur = document.body.dataset.cur;
+  if (CK[cur]) muatHalaman(cur);
+}
+
+function toggleManual(k, buka) {
+  const el = document.querySelector('[data-manual="' + k + '"]');
+  if (el) el.classList.toggle('manual-closed', buka === undefined ? !el.classList.contains('manual-closed') : !buka);
+}
+
+// Inisialisasi (harus di paling bawah, setelah semua konstanta dibuat)
+['spp', 'kd', 'du'].forEach(buatHalaman);
 goView('home');
-pilihBayar('spp');
