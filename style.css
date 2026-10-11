@@ -86,3 +86,31 @@ body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verda
   .no-print { display: none !important; }
   .card { box-shadow: none !important; border: none !important; }
 }
+
+/* ===== Halaman terpisah (berlaku di HP & laptop) ===== */
+.mv-hide, .santri-form-closed, .manual-closed { display: none !important; }
+body[data-cur="santri"] #myTab { display: none; }
+body[data-cur="riwayat"] #li-tab-santri { display: none; }
+@media (min-width: 768px) {
+  #bottomNav { display: flex; background: #fff; border-bottom: 1px solid #e0e0e0; padding: 0 12px; margin-bottom: 1rem; }
+  #bottomNav .bn-item { border: 0; background: none; padding: 12px 18px; display: flex; align-items: center; gap: 6px; color: #6c757d; font-size: .95rem; border-bottom: 3px solid transparent; }
+  #bottomNav .bn-item.active { color: #1b5e20; font-weight: 700; border-bottom-color: #1b5e20; }
+}
+
+/* ===== Daftar centang pembayaran ===== */
+.chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 4px; }
+.chip { border: 1px solid #cfd8dc; background: #fff; border-radius: 999px; padding: 6px 12px; font-size: .85rem; white-space: nowrap; }
+.chip span { font-weight: 700; color: #dc3545; margin-left: 4px; }
+.chip.on { background: #1b5e20; color: #fff; border-color: #1b5e20; }
+.chip.on span { color: #fff; }
+.ck-row { display: flex; align-items: center; gap: 12px; padding: 12px 8px; border-bottom: 1px solid #eee; cursor: pointer; margin: 0; }
+.ck-row input { width: 26px; height: 26px; flex: 0 0 auto; }
+.ck-row.sel { background: #e8f5e9; }
+.ck-row.lns { opacity: .55; cursor: default; }
+.ck-main { flex: 1; min-width: 0; }
+.ck-nama { font-weight: 600; }
+.ck-sub { font-size: .8rem; color: #6c757d; }
+.ck-nom { font-weight: 600; white-space: nowrap; }
+.aksi-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1040; background: #fff; border-top: 1px solid #ddd; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 -2px 12px rgba(0,0,0,.12); }
+#undoBar { position: fixed; left: 10px; right: 10px; bottom: 12px; z-index: 1040; }
+@media (max-width: 767.98px) { .aksi-bar, #undoBar { bottom: calc(62px + env(safe-area-inset-bottom)); } .aksi-bar { left: 0; right: 0; } }
